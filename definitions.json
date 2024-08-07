@@ -1,0 +1,38 @@
+{
+    "id": "DELETE_COMPONENT",
+    "name": "Delete Component Request",
+    "approverTypes": ["project user group", "roles", "individuals"],
+    "state": "Pending",
+    "executeUponApproval": true,
+    "transitions": {
+        "Approve": "Approved",
+        "Reject": "Rejected"
+    },
+    "data": {
+        "componentName": {
+            "displayName": "Component Name",
+            "extractFrom": "component.name"
+        },
+        "componentDescription": {
+            "displayName": "Component Description",
+            "extractFrom": "component.description"
+        }
+    }
+}
+
+
+{
+    "id": "212e5ef0-8379-4d5f-b76a-2f84a2b22d29",
+    "workflow_id": "24da5e43-6dde-4d68-87c7-4bbd4925cbde",
+    "request_time": "2023-11-05T13:15:30Z",
+    "requested_by": "abc@wso2.com",
+    "action": "delete",
+    "resource": "a9918e1c-382c-4b49-8c0f-9a3bb60c5d58",
+    "request_comment": "",
+    "review_time": "2023-11-05T13:30:30Z",
+    "reviewed_by": "def@wso2.com",
+    "review_comment": "",
+    "state": "Pending""data": {
+       ... //extracted from incoming request according to the pointed workflow definition
+    }
+}
