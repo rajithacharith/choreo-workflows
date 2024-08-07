@@ -156,8 +156,6 @@ service http:Service /workflow\-mgt/v1 on httpListener {
     #
     # + workflow\-id - Identifier of the workflow instance
     # + ctx - Request context
-    # + action - Action performed by the workflow
-    # + 'resource - Resource on which the action is performed
     # + return - Formatted review data
     resource function get workflows/[string workflow\-id]/review\-data(http:RequestContext ctx) returns json
             |util:InternalServerError|util:Forbidden|util:ResourceNotFound {
