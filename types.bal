@@ -7,6 +7,8 @@ import ballerina/time;
 # + description - description of the workflow
 # + approverTypes - list of approver types supported by the workflow
 # + executeUponApproval - flag to indicate whether the action should be executed upon approval
+# + allowParallelRequests - flag to indicate whether parallel requests are allowed. For conflicting actions,
+#                           only one request can present in the org at a time
 # + transitions - list of transitions. Key: transition from, Value: transition to
 # + requestFormatSchema - schema to format the input data for the approval
 public type WorkflowDefinition record {
@@ -15,6 +17,7 @@ public type WorkflowDefinition record {
     string description;
     ApproverType[] approverTypes;
     boolean executeUponApproval;
+    boolean allowParallelRequests;
     map<string> transitions;
     map<formatSchemaEntry> requestFormatSchema;
 };
@@ -36,7 +39,7 @@ public type WorkflowConfig record {
 };
 
 public type Workflow record {
-    string id;
+    string id;   // for a given action and resource, this is unique for a given org
     * WorkflowRequest;
     * Review;
     WorkflowConfig config;
