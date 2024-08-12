@@ -26,13 +26,14 @@ import ballerina/time;
 # + allowParallelRequests - flag to indicate whether parallel requests are allowed. For conflicting actions,
 #                           only one request can present in the org at a time
 # + requestFormatSchema - schema to format the input data for the approval
-public type Workflow record {|
+public type WorkflowDefinition record {|
     string id;
     string name;
     string description;
     ApproverType[] approverTypes;
     boolean executeUponApproval;
     boolean allowParallelRequests;
+    //Resource and action should come here?
     map<FormatSchemaEntry> requestFormatSchema;
 |};
 
@@ -48,7 +49,7 @@ public type Workflow record {|
 # sent as it is.
 # + externalWorkflowEngineEndpoint - endpoint of the external workflow engine to execute the workflow
 public type OrgWorkflowConfig record {|
-    Workflow workflow;
+    WorkflowDefinition workflow;
     string orgId;
     string[] assigneeRoles;
     string[] assignees;

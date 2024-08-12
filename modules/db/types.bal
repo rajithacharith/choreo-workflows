@@ -14,9 +14,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-public type Workflow record {|
+public type WorkflowDefinition record {|
     string id;
-    string orgId;
     string name;
     string description;
     string approverTypes;
@@ -32,6 +31,7 @@ public type OrgWorkflowConfig record {|
     string assigneeRoles;
     string assignees;
     boolean formatRequestData;
+    string externalWorkflowEngineEndpoint;
 |};
 
 public type WorkflowInstance record {|
@@ -43,7 +43,8 @@ public type WorkflowInstance record {|
     string requestedBy;
     string requestedTime;
     string requestComment?;
-    string data?;
+    string data;
+    string status;
     string reviewedBy?;
     string reviewerDecision?;
     string reviewComment?;
