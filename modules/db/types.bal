@@ -27,7 +27,7 @@ public type WorkflowDefinition record {|
 public type OrgWorkflowConfig record {|
     string id;
     string orgId;
-    string workflowId;
+    string workflowDefinitionId; //foreign key for WorkflowDefinition
     string assigneeRoles;
     string assignees;
     boolean formatRequestData;
@@ -36,14 +36,14 @@ public type OrgWorkflowConfig record {|
 
 public type WorkflowInstance record {|
     string id;
-    string OrgWorkflowConfigId;
+    string OrgWorkflowConfigId;  //foreign key for OrgWorkflowConfig
     string orgId;
     string 'resource;
     string action;
-    string requestedBy;
-    string requestedTime;
+    string createdBy;
+    string createdTime;
     string requestComment?;
-    string data;
+    json data;
     string status;
     string reviewedBy?;
     string reviewerDecision?;
@@ -54,17 +54,11 @@ public type WorkflowInstance record {|
 public type AuditEvent record {|
     string id;
     string orgId;
-    string eventType;
+    string eventType; //request, review, approve, reject, cancel, execute
     string time;
     string user;
-    string workflowId;
-    string comment?;  // request comment or review comment
-|};
-
-public type WorkflowInstanceData record {|
-    string workflowId;
-    string orgId;
     string action;
     string 'resource;
-    json data;
+    string workflowInstanceId; //do not foreign key to WorkflowInstance (as it can be deleted)
+    string comment?;  // request comment or review comment
 |};

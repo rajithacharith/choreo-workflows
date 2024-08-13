@@ -18,8 +18,6 @@ import workflow_mgt_service.config;
 import workflow_mgt_service.util;
 import ballerina/http;
 
-//util:BadRequest|util:InternalServerError|util:Forbidden
-
 listener http:Listener httpListener = new (config:servicePort, config = {
     requestLimits: {
         maxUriLength: 4096,
