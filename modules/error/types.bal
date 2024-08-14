@@ -14,4 +14,16 @@
 // specific language governing permissions and limitations
 // under the License.
 
+public type Error distinct error;
 
+public type ProcessingError distinct Error;
+
+public type ResourceNotFoundError distinct Error;
+
+public type ValidationError distinct Error;
+
+public type AuthenticationError distinct Error;
+
+public type DatabaseError distinct Error;
+
+public type CdnError distinct Error;

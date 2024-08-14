@@ -13,8 +13,9 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+import ballerina/sql;
 
-public type WorkflowDefinition record {|
+public type DbWorkflowDefinition record {|
     string id;
     string name;
     string description;
@@ -24,7 +25,7 @@ public type WorkflowDefinition record {|
     json requestFormatSchema;
 |};
 
-public type OrgWorkflowConfig record {|
+public type DbOrgWorkflowConfig record {|
     string id;
     string orgId;
     string workflowDefinitionId; //foreign key for WorkflowDefinition
@@ -34,7 +35,7 @@ public type OrgWorkflowConfig record {|
     string externalWorkflowEngineEndpoint;
 |};
 
-public type WorkflowInstance record {|
+public type DbWorkflowInstance record {|
     string id;
     string OrgWorkflowConfigId;  //foreign key for OrgWorkflowConfig
     string orgId;
@@ -45,13 +46,16 @@ public type WorkflowInstance record {|
     string requestComment?;
     json data;
     string status;
+    @sql:Column {
+        name: "review_by"
+    }
     string reviewedBy?;
     string reviewerDecision?;
     string reviewComment?;
     string reviewTime?;
 |};
 
-public type AuditEvent record {|
+public type DbAuditEvent record {|
     string id;
     string orgId;
     string eventType; //request, review, approve, reject, cancel, execute

@@ -24,7 +24,7 @@
 # + approverTypes - list of approver types supported by the workflow
 # + executeUponApproval - flag to indicate whether the action should be executed upon approval
 # + allowParallelRequests - flag to indicate whether parallel requests are allowed. For conflicting actions,
-#                           only one request can present in the org at a time
+# only one request can present in the org at a time
 # + requestFormatSchema - schema to format the input data for the approval
 public type WorkflowDefinition record {|
     string id;
@@ -37,31 +37,39 @@ public type WorkflowDefinition record {|
     map<FormatSchemaEntry> requestFormatSchema;
 |};
 
-# Workflow configuration for an action. This defines the configuration of the workflow.
-# A workflow instance is created based on the configuration.
+# Request to configure a workflow definition for an organization.
 #
-# + workflow - workflow definition
-# + orgId - organization id
+# + workflowDefinitionId - identifier of the workflow definition against which configuration is done
 # + assigneeRoles - list of roles to assign the action
 # + assignees - list of users to assign the action (user ids)
 # + formatRequestData - flag to indicate whether the input data should be formatted before sending for approval
 # based on the schema defined in the workflow definition. If false, the input data will be
 # sent as it is.
 # + externalWorkflowEngineEndpoint - endpoint of the external workflow engine to execute the workflow
-public type OrgWorkflowConfig record {|
-    WorkflowDefinition workflow;
-    string orgId;
+public type OrgWorkflowConfigRequest record {|
+    string workflowDefinitionId;
     string[] assigneeRoles;
     string[] assignees;
     boolean formatRequestData = true;
     string externalWorkflowEngineEndpoint?;
 |};
 
+# Organizational configuration of a workflow definition.
+# A workflow instance is created within the org based on this configuration.
+#
+# + id - Identifier of the workflow configuration
+# + orgId - field description
+public type OrgWorkflowConfig record {|
+    string id;
+    string orgId;
+    * OrgWorkflowConfigRequest;
+|};
+
 public type WorkflowInstance record {|
-    string id;   // for a given action and resource, this is unique for a given org
+    string id; // for a given action and resource, this is unique for a given org
     string orgId;
     string createdTime;
-    * WorkflowInstanceCreateRequest;
+    *WorkflowInstanceCreateRequest;
     never data; //We get data separately
     OrgWorkflowConfig config;
     ReviewerDecisionRequest reviewerDecision?;
@@ -71,18 +79,18 @@ public type WorkflowInstance record {|
 # Request to create a workflow instance
 #
 # + context - context of the workflow. This is used to identify the workflow instance uniquely within the org
-# + requestedBy - field description
+# + createdBy - user who created the workflow instance. This is extracted from the JWT
 # + requestComment - field description
 # + data - field description
 public type WorkflowInstanceCreateRequest record {|
     WorkflowContext context;
-    string requestedBy; //get by JWT
+    string createdBy; //get by JWT
     string requestComment?;
     json data;
 |};
 
 public type ReviewerDecisionRequest record {|
-    string reviewedBy?;  // get by JWT
+    string reviewedBy?; // get by JWT
     ReviewerDecision decision;
     string reviewComment?;
 |};
@@ -91,7 +99,7 @@ public type AuditEvent record {|
     AuditEventType eventType;
     string time;
     string user;
-    * WorkflowInstance;
+    *WorkflowInstance;
     never WorkflowConfig;
 |};
 
@@ -109,7 +117,7 @@ public type FormatSchemaEntry record {|
 
 public type WorkflowInstanceCreateNotification record {|
     string id;
-    * WorkflowInstanceCreateRequest;
+    *WorkflowInstanceCreateRequest;
 |};
 
 # Context of the workflow. This is used to identify the workflow instance uniquely within the org.

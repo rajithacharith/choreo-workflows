@@ -13,5 +13,17 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+import ballerina/lang.regexp;
 
+public isolated function stringArrayToString(string[] arr) returns string {
+    string result = "";
+    foreach string item in arr {
+        result = result + item + ",";
+    }
+    return result;
+}
 
+public isolated function stringToStringArray(string str) returns string[] {
+    string:RegExp r = re `,`;
+    return r.split(str);
+}

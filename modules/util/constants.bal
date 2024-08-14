@@ -14,4 +14,13 @@
 // specific language governing permissions and limitations
 // under the License.
 
+public const  REQUEST_ID = "requestId";
+public const REQUEST_ID_HEADER = "request-id";
+public const ORGANIZATION_ID = "orgId";
+public const ORGANIZATION_HANDLE = "orgHandle";
+public const ORG_ID_QUERY_PARAM = "orgId";
 
+public const ORG_KEY_IN_JWT = "organization";
+public const JWT_HEADER = "x-jwt-assertion";
+
+public const USER_ID = "";

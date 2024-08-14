@@ -14,4 +14,14 @@
 // specific language governing permissions and limitations
 // under the License.
 
+import ballerina/io;
+import ballerina/log;
 
+function readStringFromFile(string path, string defaultValue) returns string {
+    string|io:Error fileReadString = io:fileReadString(path);
+    if fileReadString is string {
+        return fileReadString;
+    }
+    log:printError("Invalid value for provided file path. Continue with default value", 'error = fileReadString, path = path);
+    return defaultValue;
+}

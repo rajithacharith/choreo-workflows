@@ -17,6 +17,7 @@
 import workflow_mgt_service.config;
 import workflow_mgt_service.util;
 import ballerina/http;
+import workflow_mgt_service.types;
 
 listener http:Listener httpListener = new (config:servicePort, config = {
     requestLimits: {
@@ -34,7 +35,7 @@ service http:Service /workflow\-mgt/v1 on httpListener {
     #
     # + ctx - request context
     # + return - list of workflow definitions
-    resource function get workflow/definitions(http:RequestContext ctx) returns WorkflowDefinition[]|
+    resource function get workflow/definitions(http:RequestContext ctx) returns types:WorkflowDefinition[]|
     util:InternalServerError|util:Forbidden {
         return [];
     }
@@ -43,7 +44,7 @@ service http:Service /workflow\-mgt/v1 on httpListener {
     #
     # + ctx - Request context
     # + return - List of workflow configurations
-    resource function get workflow/configs(http:RequestContext ctx) returns OrgWorkflowConfig[]
+    resource function get workflow/configs(http:RequestContext ctx) returns types:OrgWorkflowConfig[]
         |util:InternalServerError|util:Forbidden {
         //validate orgId from the context
         return [];
@@ -52,9 +53,9 @@ service http:Service /workflow\-mgt/v1 on httpListener {
     # Configure a workflow for the organization.
     #
     # + ctx - request context
-    # + workflowConfig - parameter description
+    # + workflowConfigRequest - parameter description
     # + return - configured workflow
-    resource function post workflow/configs(http:RequestContext ctx, OrgWorkflowConfig workflowConfig) returns OrgWorkflowConfig
+    resource function post workflow/configs(http:RequestContext ctx, types:OrgWorkflowConfigRequest workflowConfigRequest) returns types:OrgWorkflowConfig
             |util:BadRequest|util:InternalServerError|util:Forbidden {
         //validate orgId from the context
         return internalError;
@@ -66,8 +67,20 @@ service http:Service /workflow\-mgt/v1 on httpListener {
     # + ctx - request context
     # + workflowConfig - Updated workflow configuration
     # + return - Configured workflow
-    resource function put workflow/configs/[string workflow\-config\-id](http:RequestContext ctx, OrgWorkflowConfig workflowConfig) returns OrgWorkflowConfig
+    resource function put workflow/configs/[string workflow\-config\-id](http:RequestContext ctx, types:OrgWorkflowConfig workflowConfig) returns types:OrgWorkflowConfig
             |util:BadRequest|util:InternalServerError|util:Forbidden {
+        //validate orgId from the context
+        return internalError;
+    }
+
+
+    # Delete a workflow configuration.
+    #
+    # + workflow\-config\-id - Identifier of the workflow configuration
+    # + ctx - Request context
+    # + return - Deleted workflow configuration
+    resource function delete workflow/configs/[string workflow\-config\-id](http:RequestContext ctx) returns types:OrgWorkflowConfig
+            |util:InternalServerError|util:Forbidden|util:ResourceNotFound {
         //validate orgId from the context
         return internalError;
     }
@@ -90,7 +103,7 @@ service http:Service /workflow\-mgt/v1 on httpListener {
             string? status = (),
             string? 'resource = (),
             string? requested\-by = ()
-    ) returns WorkflowInstance[]|util:InternalServerError|util:Forbidden|util:BadRequest {
+    ) returns types:WorkflowInstance[]|util:InternalServerError|util:Forbidden|util:BadRequest {
 
         //default sorting is by requested time
         //Get orgId from the context
@@ -107,7 +120,7 @@ service http:Service /workflow\-mgt/v1 on httpListener {
     # + workflow\-instance\-id - Identifier of the workflow instance
     # + ctx - Request context
     # + return - Workflow instance
-    resource function get workflow\-instances/[string workflow\-instance\-id](http:RequestContext ctx) returns WorkflowInstance
+    resource function get workflow\-instances/[string workflow\-instance\-id](http:RequestContext ctx) returns types:WorkflowInstance
             |util:InternalServerError|util:Forbidden|util:BadRequest|util:ResourceNotFound {
         return internalError;
     }
@@ -117,7 +130,7 @@ service http:Service /workflow\-mgt/v1 on httpListener {
     # + ctx - Request context
     # + request - Workflow request
     # + return - Created workflow instance
-    resource function post workflow\-instances(http:RequestContext ctx, WorkflowInstanceCreateRequest request) returns WorkflowInstance
+    resource function post workflow\-instances(http:RequestContext ctx, types:WorkflowInstanceCreateRequest request) returns types:WorkflowInstance
             |util:BadRequest|util:InternalServerError|util:Forbidden {
         return internalError;
     }
@@ -127,7 +140,7 @@ service http:Service /workflow\-mgt/v1 on httpListener {
     # + workflow\-instance\-id - Identifier of the workflow instance
     # + ctx - Request context
     # + return - Cancelled workflow instance
-    resource function delete workflow\-instances/[string workflow\-instance\-id](http:RequestContext ctx) returns WorkflowInstance
+    resource function delete workflow\-instances/[string workflow\-instance\-id](http:RequestContext ctx) returns types:WorkflowInstance
             |util:InternalServerError|util:Forbidden|util:ResourceNotFound {
         //remove from workflow DB
         return internalError;
@@ -140,12 +153,12 @@ service http:Service /workflow\-mgt/v1 on httpListener {
     # + action - Action performed by the workflow
     # + 'resource - Resource on which the action is performed
     # + return - Status of the workflows
-    resource function get workflow\-instances/status(http:RequestContext ctx, string action, string 'resource) returns WorkflowInstanceStatus
+    resource function get workflow\-instances/status(http:RequestContext ctx, string action, string 'resource) returns types:WorkflowInstanceStatus
             |util:InternalServerError|util:Forbidden|util:ResourceNotFound {
         //if parallel requests are not allowed, check if there is a request in progress and get the status
         //if not no need to check the status
         //used by UI for button text rendering
-        return DISABLED;
+        return types:DISABLED;
     }
 
     # Review a workflow request.
@@ -154,7 +167,7 @@ service http:Service /workflow\-mgt/v1 on httpListener {
     # + ctx - Request context
     # + review - Payload with review details
     # + return - Updated workflow instance
-    resource function post review/[string workflow\-id]/decision(http:RequestContext ctx, ReviewerDecisionRequest review) returns WorkflowInstance
+    resource function post review/[string workflow\-id]/decision(http:RequestContext ctx, types:ReviewerDecisionRequest review) returns types:WorkflowInstance
             |util:BadRequest|util:InternalServerError|util:Forbidden|util:ResourceNotFound {
         //check approver is not the same as the requestedBy
         //update status
@@ -201,7 +214,7 @@ service http:Service /workflow\-mgt/v1 on httpListener {
             string? requested\-by = (),
             string? reviwed\-by = (),
             string? executed\-by = ()
-    ) returns AuditEvent[]|util:InternalServerError|util:Forbidden|util:BadRequest {
+    ) returns types:AuditEvent[]|util:InternalServerError|util:Forbidden|util:BadRequest {
         //default sorting is by requested time
         return [];
     }
@@ -211,7 +224,7 @@ service http:Service /workflow\-mgt/v1 on httpListener {
     # + workflow\-instance\-id - Identifier of the workflow instance
     # + ctx - Request context
     # + return - List of audits related to the workflow run
-    resource function get audits/[string workflow\-instance\-id](http:RequestContext ctx) returns AuditEvent[]
+    resource function get audits/[string workflow\-instance\-id](http:RequestContext ctx) returns types:AuditEvent[]
             |util:InternalServerError|util:Forbidden|util:BadRequest {
         return [];
     }
