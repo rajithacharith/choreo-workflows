@@ -18,6 +18,7 @@ public type WorkflowDefinition record {|
     boolean allowParallelRequests;
     string requestFormatSchema;
     OrgWorkflowConfig[] orgworkflowconfigs;
+	WorkflowInstance[] workflowinstance;
 |};
 
 @sql:Name {value: "audit_event"}
@@ -57,7 +58,7 @@ public type WorkflowInstance record {|
     @sql:Varchar {length: 255}
     string 'resource;
     @sql:Varchar {length: 255}
-    string action;
+    string workflowDefinitionId;
     @sql:Name {value: "created_by"}
     @sql:Varchar {length: 255}
     string createdBy;
@@ -80,6 +81,8 @@ public type WorkflowInstance record {|
     time:Utc? reviewTime;
     @sql:Relation {keys: ["orgWorkflowConfigId"]}
     OrgWorkflowConfig orgworkflowconfig;
+    @sql:Relation {keys: ["workflowDefinitionId"]}
+    WorkflowDefinition workflowDefinition;
 |};
 
 @sql:Name {value: "org_workflow_config"}

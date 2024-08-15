@@ -33,17 +33,34 @@ public isolated client class Client {
                 approverTypes: {columnName: "approver_types"},
                 executeUponApproval: {columnName: "execute_upon_approval"},
                 allowParallelRequests: {columnName: "allow_parallel_requests"},
-                requestFormatSchema: {columnName: "request_format_schema"},
+                requestFormatSchema: {columnName: "requestFormatSchema"},
                 "orgworkflowconfigs[].id": {relation: {entityName: "orgworkflowconfigs", refField: "id"}},
                 "orgworkflowconfigs[].orgId": {relation: {entityName: "orgworkflowconfigs", refField: "orgId", refColumn: "org_id"}},
                 "orgworkflowconfigs[].assigneeRoles": {relation: {entityName: "orgworkflowconfigs", refField: "assigneeRoles", refColumn: "assignee_roles"}},
                 "orgworkflowconfigs[].assignees": {relation: {entityName: "orgworkflowconfigs", refField: "assignees"}},
                 "orgworkflowconfigs[].formatRequestData": {relation: {entityName: "orgworkflowconfigs", refField: "formatRequestData", refColumn: "format_request_data"}},
                 "orgworkflowconfigs[].externalWorkflowEngineEndpoint": {relation: {entityName: "orgworkflowconfigs", refField: "externalWorkflowEngineEndpoint", refColumn: "external_workflow_engine_endpoint"}},
-                "orgworkflowconfigs[].workflowDefinitionId": {relation: {entityName: "orgworkflowconfigs", refField: "workflowDefinitionId", refColumn: "workflow_definition_id"}}
+                "orgworkflowconfigs[].workflowDefinitionId": {relation: {entityName: "orgworkflowconfigs", refField: "workflowDefinitionId", refColumn: "workflow_definition_id"}},
+                "workflowinstance[].id": {relation: {entityName: "workflowinstance", refField: "id"}},
+                "workflowinstance[].orgId": {relation: {entityName: "workflowinstance", refField: "orgId", refColumn: "org_id"}},
+                "workflowinstance[].resource": {relation: {entityName: "workflowinstance", refField: "resource"}},
+                "workflowinstance[].createdBy": {relation: {entityName: "workflowinstance", refField: "createdBy", refColumn: "created_by"}},
+                "workflowinstance[].createdTime": {relation: {entityName: "workflowinstance", refField: "createdTime", refColumn: "created_time"}},
+                "workflowinstance[].requestComment": {relation: {entityName: "workflowinstance", refField: "requestComment", refColumn: "request_comment"}},
+                "workflowinstance[].data": {relation: {entityName: "workflowinstance", refField: "data"}},
+                "workflowinstance[].status": {relation: {entityName: "workflowinstance", refField: "status"}},
+                "workflowinstance[].reviewedBy": {relation: {entityName: "workflowinstance", refField: "reviewedBy", refColumn: "reviewed_by"}},
+                "workflowinstance[].reviewerDecision": {relation: {entityName: "workflowinstance", refField: "reviewerDecision", refColumn: "reviewer_decision"}},
+                "workflowinstance[].reviewComment": {relation: {entityName: "workflowinstance", refField: "reviewComment", refColumn: "review_comment"}},
+                "workflowinstance[].reviewTime": {relation: {entityName: "workflowinstance", refField: "reviewTime", refColumn: "review_time"}},
+                "workflowinstance[].orgWorkflowConfigId": {relation: {entityName: "workflowinstance", refField: "orgWorkflowConfigId", refColumn: "org_workflow_config_id"}},
+                "workflowinstance[].workflowDefinitionId": {relation: {entityName: "workflowinstance", refField: "workflowDefinitionId"}}
             },
             keyFields: ["id"],
-            joinMetadata: {orgworkflowconfigs: {entity: OrgWorkflowConfig, fieldName: "orgworkflowconfigs", refTable: "org_workflow_config", refColumns: ["workflow_definition_id"], joinColumns: ["id"], 'type: psql:MANY_TO_ONE}}
+            joinMetadata: {
+                orgworkflowconfigs: {entity: OrgWorkflowConfig, fieldName: "orgworkflowconfigs", refTable: "org_workflow_config", refColumns: ["workflow_definition_id"], joinColumns: ["id"], 'type: psql:MANY_TO_ONE},
+                workflowinstance: {entity: WorkflowInstance, fieldName: "workflowinstance", refTable: "workflow_instance", refColumns: ["workflowDefinitionId"], joinColumns: ["id"], 'type: psql:MANY_TO_ONE}
+            }
         },
         [AUDIT_EVENT]: {
             entityName: "AuditEvent",
@@ -68,7 +85,6 @@ public isolated client class Client {
                 id: {columnName: "id"},
                 orgId: {columnName: "org_id"},
                 'resource: {columnName: "resource"},
-                action: {columnName: "action"},
                 createdBy: {columnName: "created_by"},
                 createdTime: {columnName: "created_time"},
                 requestComment: {columnName: "request_comment"},
@@ -79,16 +95,27 @@ public isolated client class Client {
                 reviewComment: {columnName: "review_comment"},
                 reviewTime: {columnName: "review_time"},
                 orgWorkflowConfigId: {columnName: "org_workflow_config_id"},
+                workflowDefinitionId: {columnName: "workflowDefinitionId"},
                 "orgworkflowconfig.id": {relation: {entityName: "orgworkflowconfig", refField: "id"}},
                 "orgworkflowconfig.orgId": {relation: {entityName: "orgworkflowconfig", refField: "orgId", refColumn: "org_id"}},
                 "orgworkflowconfig.assigneeRoles": {relation: {entityName: "orgworkflowconfig", refField: "assigneeRoles", refColumn: "assignee_roles"}},
                 "orgworkflowconfig.assignees": {relation: {entityName: "orgworkflowconfig", refField: "assignees"}},
                 "orgworkflowconfig.formatRequestData": {relation: {entityName: "orgworkflowconfig", refField: "formatRequestData", refColumn: "format_request_data"}},
                 "orgworkflowconfig.externalWorkflowEngineEndpoint": {relation: {entityName: "orgworkflowconfig", refField: "externalWorkflowEngineEndpoint", refColumn: "external_workflow_engine_endpoint"}},
-                "orgworkflowconfig.workflowDefinitionId": {relation: {entityName: "orgworkflowconfig", refField: "workflowDefinitionId", refColumn: "workflow_definition_id"}}
+                "orgworkflowconfig.workflowDefinitionId": {relation: {entityName: "orgworkflowconfig", refField: "workflowDefinitionId", refColumn: "workflow_definition_id"}},
+                "workflowDefinition.id": {relation: {entityName: "workflowDefinition", refField: "id"}},
+                "workflowDefinition.name": {relation: {entityName: "workflowDefinition", refField: "name"}},
+                "workflowDefinition.description": {relation: {entityName: "workflowDefinition", refField: "description"}},
+                "workflowDefinition.approverTypes": {relation: {entityName: "workflowDefinition", refField: "approverTypes", refColumn: "approver_types"}},
+                "workflowDefinition.executeUponApproval": {relation: {entityName: "workflowDefinition", refField: "executeUponApproval", refColumn: "execute_upon_approval"}},
+                "workflowDefinition.allowParallelRequests": {relation: {entityName: "workflowDefinition", refField: "allowParallelRequests", refColumn: "allow_parallel_requests"}},
+                "workflowDefinition.requestFormatSchema": {relation: {entityName: "workflowDefinition", refField: "requestFormatSchema"}}
             },
             keyFields: ["id"],
-            joinMetadata: {orgworkflowconfig: {entity: OrgWorkflowConfig, fieldName: "orgworkflowconfig", refTable: "org_workflow_config", refColumns: ["id"], joinColumns: ["org_workflow_config_id"], 'type: psql:ONE_TO_MANY}}
+            joinMetadata: {
+                orgworkflowconfig: {entity: OrgWorkflowConfig, fieldName: "orgworkflowconfig", refTable: "org_workflow_config", refColumns: ["id"], joinColumns: ["org_workflow_config_id"], 'type: psql:ONE_TO_MANY},
+                workflowDefinition: {entity: WorkflowDefinition, fieldName: "workflowDefinition", refTable: "workflow_definition", refColumns: ["id"], joinColumns: ["workflowDefinitionId"], 'type: psql:ONE_TO_MANY}
+            }
         },
         [ORG_WORKFLOW_CONFIG]: {
             entityName: "OrgWorkflowConfig",
@@ -107,11 +134,10 @@ public isolated client class Client {
                 "workflowdefinition.approverTypes": {relation: {entityName: "workflowdefinition", refField: "approverTypes", refColumn: "approver_types"}},
                 "workflowdefinition.executeUponApproval": {relation: {entityName: "workflowdefinition", refField: "executeUponApproval", refColumn: "execute_upon_approval"}},
                 "workflowdefinition.allowParallelRequests": {relation: {entityName: "workflowdefinition", refField: "allowParallelRequests", refColumn: "allow_parallel_requests"}},
-                "workflowdefinition.requestFormatSchema": {relation: {entityName: "workflowdefinition", refField: "request_format_schema"}},
+                "workflowdefinition.requestFormatSchema": {relation: {entityName: "workflowdefinition", refField: "requestFormatSchema"}},
                 "workflowinstances[].id": {relation: {entityName: "workflowinstances", refField: "id"}},
                 "workflowinstances[].orgId": {relation: {entityName: "workflowinstances", refField: "orgId", refColumn: "org_id"}},
                 "workflowinstances[].resource": {relation: {entityName: "workflowinstances", refField: "resource"}},
-                "workflowinstances[].action": {relation: {entityName: "workflowinstances", refField: "action"}},
                 "workflowinstances[].createdBy": {relation: {entityName: "workflowinstances", refField: "createdBy", refColumn: "created_by"}},
                 "workflowinstances[].createdTime": {relation: {entityName: "workflowinstances", refField: "createdTime", refColumn: "created_time"}},
                 "workflowinstances[].requestComment": {relation: {entityName: "workflowinstances", refField: "requestComment", refColumn: "request_comment"}},
@@ -121,7 +147,8 @@ public isolated client class Client {
                 "workflowinstances[].reviewerDecision": {relation: {entityName: "workflowinstances", refField: "reviewerDecision", refColumn: "reviewer_decision"}},
                 "workflowinstances[].reviewComment": {relation: {entityName: "workflowinstances", refField: "reviewComment", refColumn: "review_comment"}},
                 "workflowinstances[].reviewTime": {relation: {entityName: "workflowinstances", refField: "reviewTime", refColumn: "review_time"}},
-                "workflowinstances[].orgWorkflowConfigId": {relation: {entityName: "workflowinstances", refField: "orgWorkflowConfigId", refColumn: "org_workflow_config_id"}}
+                "workflowinstances[].orgWorkflowConfigId": {relation: {entityName: "workflowinstances", refField: "orgWorkflowConfigId", refColumn: "org_workflow_config_id"}},
+                "workflowinstances[].workflowDefinitionId": {relation: {entityName: "workflowinstances", refField: "workflowDefinitionId"}}
             },
             keyFields: ["id"],
             joinMetadata: {
@@ -317,3 +344,4 @@ public isolated client class Client {
         return result;
     }
 }
+

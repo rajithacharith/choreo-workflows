@@ -66,3 +66,12 @@ public type DbAuditEvent record {|
     string workflowInstanceId; //do not foreign key to WorkflowInstance (as it can be deleted)
     string comment?;  // request comment or review comment
 |};
+
+public type WorkflorInstanceWithDefinitionDetails record {|
+    *WorkflowInstance;
+    record {|
+        string id;
+        string name;
+        string description;
+    |} workflowDefinition;
+|};

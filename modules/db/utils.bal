@@ -13,6 +13,8 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+
+import workflow_mgt_service.types;
 import ballerina/lang.regexp;
 
 public isolated function stringArrayToString(string[] arr) returns string {
@@ -26,4 +28,15 @@ public isolated function stringArrayToString(string[] arr) returns string {
 public isolated function stringToStringArray(string str) returns string[] {
     string:RegExp r = re `,`;
     return r.split(str);
+}
+
+public isolated function serialiseSchema(map <types:FormatSchemaEntry> schema) returns string {
+    string jsonString = schema.toJsonString();
+    return jsonString;
+}
+
+public isolated function deserialiseSchema(string schema) returns map <types:FormatSchemaEntry> {
+    json jsonData = check schema.fromJsonString();
+    map<types:FormatSchemaEntry> target = check jsonData.cloneWithType();
+    return target;
 }

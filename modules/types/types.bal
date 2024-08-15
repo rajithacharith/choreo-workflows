@@ -13,6 +13,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+import ballerina/time;
 
 //import ballerina/time;
 
@@ -27,14 +28,18 @@
 # only one request can present in the org at a time
 # + requestFormatSchema - schema to format the input data for the approval
 public type WorkflowDefinition record {|
-    string id;
-    string name;
-    string description;
+    * WorkflowDefinitionIdentifier;
     ApproverType[] approverTypes;
     boolean executeUponApproval;
     boolean allowParallelRequests;
     //Resource and action should come here?
     map<FormatSchemaEntry> requestFormatSchema;
+|};
+
+public type WorkflowDefinitionIdentifier record {|
+    string id;
+    string name;
+    string description;
 |};
 
 # Request to configure a workflow definition for an organization.
@@ -65,16 +70,28 @@ public type OrgWorkflowConfig record {|
     * OrgWorkflowConfigRequest;
 |};
 
+public type WorkflowInstanceResponse record {|
+    string wkfId; // for a given action and resource, this is unique for a given org
+    string orgId;
+    time:Utc createdTime;
+    *WorkflowInstanceCreateRequest;
+    never data?; //We get data separately
+    WorkflowDefinitionIdentifier workflowDefinitionIdentifier;
+    ReviewerDecisionRequest reviewerDecision?;
+    WorkflowMgtStatus status = PENDING;
+|};
+
 public type WorkflowInstance record {|
     string id; // for a given action and resource, this is unique for a given org
     string orgId;
-    string createdTime;
+    time:Utc createdTime;
     *WorkflowInstanceCreateRequest;
-    never data; //We get data separately
-    OrgWorkflowConfig config;
+    never data?; //We get data separately
+    string orgWorkflowConfigId;
     ReviewerDecisionRequest reviewerDecision?;
-    WorkflowInstanceStatus status = PENDING;
+    WorkflowMgtStatus status = PENDING;
 |};
+
 
 # Request to create a workflow instance
 #
@@ -97,10 +114,10 @@ public type ReviewerDecisionRequest record {|
 
 public type AuditEvent record {|
     AuditEventType eventType;
-    string time;
+    time:Utc time;
     string user;
-    *WorkflowInstance;
-    never WorkflowConfig;
+    *WorkflowInstanceResponse;
+    never WorkflowConfig?;
 |};
 
 # Schema instruction on how to format input data field to form
@@ -124,22 +141,14 @@ public type WorkflowInstanceCreateNotification record {|
 #
 # + workflowDefinitionIdentifier - Identifier of the workflow definition. (one of the workflow definitions predefined in the system)
 # + 'resource - Unique identifier of the resource attached to the approval request (e.g. component id, build id)
-# + action - Type of action to be performed on the resource
 public type WorkflowContext record {|
     string workflowDefinitionIdentifier;
     string 'resource;
-    ActionOnResource action;
 |};
-
-public enum ActionOnResource {
-    CREATE,
-    DELETE,
-    UPDATE
-};
 
 public type ReviewerDecision APPROVED|REJECTED;
 
-public enum WorkflowInstanceStatus {
+public enum WorkflowMgtStatus {
     DISABLED,
     PENDING,
     APPROVED,

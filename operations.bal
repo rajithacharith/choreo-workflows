@@ -15,3 +15,6 @@
 // under the License.
 
 
+public isolated function formatDataForApprover(string workflowInstanceId, json data) returns json {
+    return data;
+}

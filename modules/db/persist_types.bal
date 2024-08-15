@@ -29,6 +29,7 @@ public type WorkflowDefinitionOptionalized record {|
 public type WorkflowDefinitionWithRelations record {|
     *WorkflowDefinitionOptionalized;
     OrgWorkflowConfigOptionalized[] orgworkflowconfigs?;
+    WorkflowInstanceOptionalized[] workflowinstance?;
 |};
 
 public type WorkflowDefinitionTargetType typedesc<WorkflowDefinitionWithRelations>;
@@ -87,7 +88,6 @@ public type WorkflowInstance record {|
     readonly string id;
     string orgId;
     string 'resource;
-    string action;
     string createdBy;
     time:Utc createdTime;
     string? requestComment;
@@ -98,13 +98,13 @@ public type WorkflowInstance record {|
     string? reviewComment;
     time:Utc? reviewTime;
     string orgWorkflowConfigId;
+    string workflowDefinitionId;
 |};
 
 public type WorkflowInstanceOptionalized record {|
     string id?;
     string orgId?;
     string 'resource?;
-    string action?;
     string createdBy?;
     time:Utc createdTime?;
     string? requestComment?;
@@ -115,11 +115,13 @@ public type WorkflowInstanceOptionalized record {|
     string? reviewComment?;
     time:Utc? reviewTime?;
     string orgWorkflowConfigId?;
+    string workflowDefinitionId?;
 |};
 
 public type WorkflowInstanceWithRelations record {|
     *WorkflowInstanceOptionalized;
     OrgWorkflowConfigOptionalized orgworkflowconfig?;
+    WorkflowDefinitionOptionalized workflowDefinition?;
 |};
 
 public type WorkflowInstanceTargetType typedesc<WorkflowInstanceWithRelations>;
@@ -129,7 +131,6 @@ public type WorkflowInstanceInsert WorkflowInstance;
 public type WorkflowInstanceUpdate record {|
     string orgId?;
     string 'resource?;
-    string action?;
     string createdBy?;
     time:Utc createdTime?;
     string? requestComment?;
@@ -140,6 +141,7 @@ public type WorkflowInstanceUpdate record {|
     string? reviewComment?;
     time:Utc? reviewTime?;
     string orgWorkflowConfigId?;
+    string workflowDefinitionId?;
 |};
 
 public type OrgWorkflowConfig record {|

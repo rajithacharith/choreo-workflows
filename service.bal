@@ -103,7 +103,7 @@ service http:Service /workflow\-mgt/v1 on httpListener {
             string? status = (),
             string? 'resource = (),
             string? requested\-by = ()
-    ) returns types:WorkflowInstance[]|util:InternalServerError|util:Forbidden|util:BadRequest {
+    ) returns types:WorkflowInstanceResponse[]|util:InternalServerError|util:Forbidden|util:BadRequest {
 
         //default sorting is by requested time
         //Get orgId from the context
@@ -120,7 +120,7 @@ service http:Service /workflow\-mgt/v1 on httpListener {
     # + workflow\-instance\-id - Identifier of the workflow instance
     # + ctx - Request context
     # + return - Workflow instance
-    resource function get workflow\-instances/[string workflow\-instance\-id](http:RequestContext ctx) returns types:WorkflowInstance
+    resource function get workflow\-instances/[string workflow\-instance\-id](http:RequestContext ctx) returns types:WorkflowInstanceResponse
             |util:InternalServerError|util:Forbidden|util:BadRequest|util:ResourceNotFound {
         return internalError;
     }
@@ -130,7 +130,7 @@ service http:Service /workflow\-mgt/v1 on httpListener {
     # + ctx - Request context
     # + request - Workflow request
     # + return - Created workflow instance
-    resource function post workflow\-instances(http:RequestContext ctx, types:WorkflowInstanceCreateRequest request) returns types:WorkflowInstance
+    resource function post workflow\-instances(http:RequestContext ctx, types:WorkflowInstanceCreateRequest request) returns types:WorkflowInstanceResponse
             |util:BadRequest|util:InternalServerError|util:Forbidden {
         return internalError;
     }
@@ -140,7 +140,7 @@ service http:Service /workflow\-mgt/v1 on httpListener {
     # + workflow\-instance\-id - Identifier of the workflow instance
     # + ctx - Request context
     # + return - Cancelled workflow instance
-    resource function delete workflow\-instances/[string workflow\-instance\-id](http:RequestContext ctx) returns types:WorkflowInstance
+    resource function delete workflow\-instances/[string workflow\-instance\-id](http:RequestContext ctx) returns types:WorkflowInstanceResponse
             |util:InternalServerError|util:Forbidden|util:ResourceNotFound {
         //remove from workflow DB
         return internalError;
@@ -153,7 +153,7 @@ service http:Service /workflow\-mgt/v1 on httpListener {
     # + action - Action performed by the workflow
     # + 'resource - Resource on which the action is performed
     # + return - Status of the workflows
-    resource function get workflow\-instances/status(http:RequestContext ctx, string action, string 'resource) returns types:WorkflowInstanceStatus
+    resource function get workflow\-instances/status(http:RequestContext ctx, string action, string 'resource) returns types:WorkflowMgtStatus
             |util:InternalServerError|util:Forbidden|util:ResourceNotFound {
         //if parallel requests are not allowed, check if there is a request in progress and get the status
         //if not no need to check the status
@@ -163,11 +163,11 @@ service http:Service /workflow\-mgt/v1 on httpListener {
 
     # Review a workflow request.
     #
-    # + workflow\-id - Identifier of the workflow instance
+    # + workflow\-instance\-id - Identifier of the workflow instance
     # + ctx - Request context
     # + review - Payload with review details
     # + return - Updated workflow instance
-    resource function post review/[string workflow\-id]/decision(http:RequestContext ctx, types:ReviewerDecisionRequest review) returns types:WorkflowInstance
+    resource function post review/[string workflow\-instance\-id]/decision(http:RequestContext ctx, types:ReviewerDecisionRequest review) returns types:WorkflowInstanceResponse
             |util:BadRequest|util:InternalServerError|util:Forbidden|util:ResourceNotFound {
         //check approver is not the same as the requestedBy
         //update status
@@ -179,10 +179,10 @@ service http:Service /workflow\-mgt/v1 on httpListener {
     # This is used to display the captured data in UI/email/notifications.
     # The format is performed based on the workflow definition.
     #
-    # + workflow\-id - Identifier of the workflow instance
+    # + workflow\-instance\-id - Identifier of the workflow instance
     # + ctx - Request context
     # + return - Formatted review data
-    resource function get review/[string workflow\-id]/data(http:RequestContext ctx) returns json
+    resource function get review/[string workflow\-instance\-id]/data(http:RequestContext ctx) returns json
             |util:InternalServerError|util:Forbidden|util:ResourceNotFound {
         //component BE needs this
         //format the captured data from the workflow request for
