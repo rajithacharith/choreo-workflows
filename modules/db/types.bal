@@ -14,6 +14,7 @@
 // specific language governing permissions and limitations
 // under the License.
 import ballerina/sql;
+import ballerina/time;
 
 public type DbWorkflowDefinition record {|
     string id;
@@ -72,6 +73,41 @@ public type WorkflorInstanceWithDefinitionDetails record {|
     record {|
         string id;
         string name;
+        string description;
+    |} workflowDefinition;
+|};
+
+public type AnnotatedWkfInstanceWithDefinitionDetails record {|
+    readonly string id;
+    @sql:Column {name: "org_id"}
+    string orgId;
+    @sql:Column {name: "resource"}
+    string 'resource;
+    @sql:Column {name: "created_by"}
+    string createdBy;
+    @sql:Column {name: "created_time"}
+    time:Utc createdTime;@sql:Column {name: "request_comment"}
+    string? requestComment;
+    @sql:Column {name: "status"}
+    string status;
+    @sql:Column {name: "reviewed_by"}
+    string? reviewedBy;
+    @sql:Column {name: "reviewer_decision"}
+    string? reviewerDecision;
+    @sql:Column {name: "review_comment"}
+    string? reviewComment;
+    @sql:Column {name: "review_time"}
+    time:Utc? reviewTime;
+    @sql:Column {name: "org_workflow_config_id"}
+    string orgWorkflowConfigId;
+    @sql:Column {name: "workflow_definition_id"}
+    string workflowDefinitionId;
+    record {|
+        @sql:Column {name: "id"}
+        string id;
+        @sql:Column {name: "name"}
+        string name;
+        @sql:Column {name: "description"}
         string description;
     |} workflowDefinition;
 |};

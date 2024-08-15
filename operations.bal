@@ -13,8 +13,14 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+import ballerina/http;
+import workflow_mgt_service.types;
 
 
-public isolated function formatDataForApprover(string workflowInstanceId, json data) returns json {
+public isolated function formatDataForReviewer(string workflowInstanceId, json data) returns json | error {
     return data;
+}
+
+public isolated function getWorkflowStatus(http:RequestContext ctx, string wkfDefinitionId, string 'resource) returns types:WorkflowMgtStatus | error  {
+    return "APPROVED";
 }

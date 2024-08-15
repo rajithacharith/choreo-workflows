@@ -146,14 +146,14 @@ service http:Service /workflow\-mgt/v1 on httpListener {
         return internalError;
     }
 
-    # Get the status of workflows related to a action and a resource.
+    # Get the status of workflows related to a given Choreo operation and a resource.
     # This is used to check if a request is in progress for a conflicting action.
     #
     # + ctx - Request context
-    # + action - Action performed by the workflow
+    # + wkfDefinitionId - Id of the workflow definition associated with the Choreo operation
     # + 'resource - Resource on which the action is performed
     # + return - Status of the workflows
-    resource function get workflow\-instances/status(http:RequestContext ctx, string action, string 'resource) returns types:WorkflowMgtStatus
+    resource function get workflow\-instances/status(http:RequestContext ctx, string wkfDefinitionId, string 'resource) returns types:WorkflowMgtStatus
             |util:InternalServerError|util:Forbidden|util:ResourceNotFound {
         //if parallel requests are not allowed, check if there is a request in progress and get the status
         //if not no need to check the status

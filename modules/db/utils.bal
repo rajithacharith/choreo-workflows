@@ -35,7 +35,7 @@ public isolated function serialiseSchema(map <types:FormatSchemaEntry> schema) r
     return jsonString;
 }
 
-public isolated function deserialiseSchema(string schema) returns map <types:FormatSchemaEntry> {
+public isolated function deserialiseSchema(string schema) returns map <types:FormatSchemaEntry>|error {
     json jsonData = check schema.fromJsonString();
     map<types:FormatSchemaEntry> target = check jsonData.cloneWithType();
     return target;

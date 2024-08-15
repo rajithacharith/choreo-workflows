@@ -19,7 +19,6 @@ import workflow_mgt_service.'error;
 import workflow_mgt_service.config;
 import workflow_mgt_service.util;
 
-import ballerina/io;
 import ballerina/persist;
 import ballerina/uuid;
 import ballerina/time;
@@ -27,7 +26,7 @@ import ballerina/log;
 import ballerina/sql;
 
 
-Client dbClient = check new ();
+final Client dbClient = check new ();
 
 //get all workflow definitions
 public isolated function getWorkflowDefinitions(util:Context context) returns types:WorkflowDefinition[]| error {
@@ -48,7 +47,7 @@ public isolated function getWorkflowDefinitions(util:Context context) returns ty
                 approverTypes: approverTypes,
                 executeUponApproval: defFromDb.executeUponApproval,
                 allowParallelRequests: defFromDb.allowParallelRequests,
-                requestFormatSchema: deserialiseSchema(defFromDb.requestFormatSchema)
+                requestFormatSchema: check deserialiseSchema(defFromDb.requestFormatSchema)
             };
             dbWkfDefinitions.push(wkfDefinition);
         };
@@ -76,7 +75,7 @@ public isolated function getWorkflowDefinition(string workflowDefinitionId) retu
             approverTypes: approverTypes,
             executeUponApproval: dbWkfDefinition.executeUponApproval,
             allowParallelRequests: dbWkfDefinition.allowParallelRequests,
-            requestFormatSchema: deserialiseSchema(dbWkfDefinition.requestFormatSchema)
+            requestFormatSchema: check deserialiseSchema(dbWkfDefinition.requestFormatSchema)
         };
         return wkfDefinition;
     } on fail error e {
@@ -143,30 +142,34 @@ public isolated function getWorkflowConfigById(util:Context context, string work
 }
 
 //get workflow config by org id and workflow definition id
-public isolated function getWorkflowConfigByOrgAndDefinition(util:Context context, string orgId, string workflowDefinitionId) returns types:OrgWorkflowConfig| error {
+public isolated function getWorkflowConfigByOrgAndDefinition(util:Context context, string workflowDefinitionId) returns types:OrgWorkflowConfig| error {
     do {
 
-        WorkflowInstance[] instances = check from WorkflowInstance instance in dbClient->/workflowinstances(WorkflowInstance)
-                            where instance.'resource == 'resource &&
-                            instance.workflowDefinitionId == workflowDefinition
-                            select instance;
-                            
-        stream<OrgWorkflowConfig, persist:Error?> streamResult = dbClient->/orgworkflowconfigs.get([orgId, workflowDefinitionId]);
-        OrgWorkflowConfig dbWkfConfig = check streamResult.next();
-        types:OrgWorkflowConfig wkfConfig = {
-            id: dbWkfConfig.id,
-            orgId: dbWkfConfig.orgId,
-            workflowDefinitionId: dbWkfConfig.workflowDefinitionId,
-            assigneeRoles: stringToStringArray(dbWkfConfig.assigneeRoles),
-            assignees: stringToStringArray(dbWkfConfig.assignees),
-            formatRequestData: dbWkfConfig.formatRequestData,
-            externalWorkflowEngineEndpoint: dbWkfConfig.externalWorkflowEngineEndpoint
-        };
-        return wkfConfig;
+        OrgWorkflowConfig[] wkfConfigs = check from OrgWorkflowConfig config in dbClient->/orgworkflowconfigs(OrgWorkflowConfig)
+                            where config.orgId == context.orgId &&
+                            config.workflowDefinitionId == workflowDefinitionId
+                            select config;
+        if (wkfConfigs.length() == 0) {
+            return error error:ResourceNotFoundError("Workflow configuration not found for the given organization and workflow definition");
+        } else if (wkfConfigs.length() > 1) {
+            return error error:DatabaseError("Multiple workflow configurations found for the given organization and workflow definition");
+        } else {
+            OrgWorkflowConfig dbWkfConfig = wkfConfigs[0];
+            types:OrgWorkflowConfig wkfConfig = {
+                id: dbWkfConfig.id,
+                orgId: dbWkfConfig.orgId,
+                workflowDefinitionId: dbWkfConfig.workflowDefinitionId,
+                assigneeRoles: stringToStringArray(dbWkfConfig.assigneeRoles),
+                assignees: stringToStringArray(dbWkfConfig.assignees),
+                formatRequestData: dbWkfConfig.formatRequestData,
+                externalWorkflowEngineEndpoint: dbWkfConfig.externalWorkflowEngineEndpoint
+            };
+            return wkfConfig;
+        }
     } on fail error e {
-        string message = "Error while retrieving workflow configuration from the database";
+        string message = string `Error while retrieving workflow configuration from the database. orgId: ${context.orgId}, workflowDefinitionId: ${workflowDefinitionId}`;
         util:logError(context, message, e);
-        return error error:DatabaseError(message, e, orgId = orgId, workflowDefinitionId = workflowDefinitionId);
+        return error error:DatabaseError(message, e, workflowDefinitionId = workflowDefinitionId);
     }
 }
 
@@ -232,7 +235,35 @@ public isolated function getWorkflowInstances(util:Context context, int 'limit,
             //Sort by created time
             //Join with workflow definition
             sql:ParameterizedQuery selectQuery = `Select status, data from workflowinstances where orgId = ${context.orgId} and createdBy = ${createdBy}`;
-            stream<WorkflowInstance, persist:Error?> queryNativeSQL = dbClient->queryNativeSQL(selectQuery);
+            stream<AnnotatedWkfInstanceWithDefinitionDetails, persist:Error?> resultStream = dbClient->queryNativeSQL(selectQuery);
+            types:WorkflowInstanceResponse[] wkfInstances = [];
+            check from AnnotatedWkfInstanceWithDefinitionDetails instance in resultStream
+            do {
+                types:WorkflowInstanceResponse wkfInstance = {
+                    wkfId: instance.id,
+                    orgId: instance.orgId,
+                    createdTime: instance.createdTime,
+                    createdBy: instance.createdBy,
+                    context: {
+                        workflowDefinitionIdentifier: instance.workflowDefinitionId,
+                        'resource: instance.'resource
+                    },
+                    workflowDefinitionIdentifier: {
+                        id: instance.workflowDefinition.id,
+                        name: instance.workflowDefinition.name,
+                        description: instance.workflowDefinition.description
+                    },
+                    requestComment: instance.requestComment,
+                    reviewerDecision: {
+                        reviewedBy: instance.reviewedBy,
+                        decision: check instance.reviewerDecision.cloneWithType(),
+                        reviewComment: instance.reviewComment
+                    },
+                    status: check instance.status.cloneWithType()
+                };
+                wkfInstances.push(wkfInstance) ;
+            };
+            return wkfInstances;
 
     } on fail error e {
         string message = "Error while retrieving workflow instances from the database";
@@ -312,6 +343,10 @@ public isolated function persistWorkflowInstance(util:Context context, types:Wor
     do {
         string workflowInstanceUuid = uuid:createType1AsString();
         time:Utc createdTime = time:utcNow();
+
+        //find workflow config related to the operation in the organization
+        types:OrgWorkflowConfig orgWkfConfig = check getWorkflowConfigByOrgAndDefinition(context, wkfInstanceReq.context.workflowDefinitionIdentifier);
+
         WorkflowInstanceInsert insertData = {
             id: workflowInstanceUuid,
             orgId: context.orgId,
@@ -324,7 +359,7 @@ public isolated function persistWorkflowInstance(util:Context context, types:Wor
             reviewerDecision: (),
             reviewComment: (),
             reviewTime: (),
-            orgWorkflowConfigId: ,
+            orgWorkflowConfigId: orgWkfConfig.id,
             workflowDefinitionId: wkfInstanceReq.context.workflowDefinitionIdentifier,
             'resource: wkfInstanceReq.context.'resource
         };
@@ -371,11 +406,37 @@ public isolated function getWorkflowInstance(util:Context context, string workfl
                             where instance.'resource == 'resource &&
                             instance.workflowDefinitionId == workflowDefinition
                             select instance;
-        return dbWkfInstanceStatus;
+        if instances.length() == 0 {
+            return error error:ResourceNotFoundError("Workflow instance not found for the given workflow definition and resource");
+        } else if instances.length() > 1 {
+            return error error:DatabaseError("Multiple workflow instances found for the given workflow definition and resource. Is resource unique?");
+        } else {
+            WorkflowInstance dbWkfInstance = instances[0];
+            types:WorkflowInstance wkfInstance = {
+                id: dbWkfInstance.id,
+                orgId: dbWkfInstance.orgId,
+                createdTime: dbWkfInstance.createdTime,
+                createdBy: dbWkfInstance.createdBy,
+                context: {
+                    workflowDefinitionIdentifier: dbWkfInstance.workflowDefinitionId,
+                    'resource: dbWkfInstance.'resource
+                },
+                requestComment: dbWkfInstance.requestComment,
+                orgWorkflowConfigId: dbWkfInstance.orgWorkflowConfigId,
+                reviewerDecision: {
+                    reviewedBy: dbWkfInstance.reviewedBy,
+                    decision: check dbWkfInstance.reviewerDecision.cloneWithType(),
+                    reviewComment: dbWkfInstance.reviewComment
+                },
+                status: check dbWkfInstance.status.cloneWithType()
+            };
+            return wkfInstance;
+        }
     } on fail error e {
-        string message = "Error while retrieving workflow instance status from the database";
+        string message = string `Error while retrieving workflow instance from the database
+        for workflow definition: ${workflowDefinition} and resource: ${'resource}`;
         util:logError(context, message, e);
-        return error error:DatabaseError(message, e, action = action, 'resource = 'resource);
+        return error error:DatabaseError(message, e);
     }
 }
 
@@ -411,34 +472,7 @@ public isolated function persistAuditEvent(util:Context context, types:AuditEven
 //search audit events
 public isolated function searchAuditEvents(util:Context context, int 'limit, int offset, string wkfDefinitionId, string status, string 'resource, string requestedBy, string reviewedBy, string executedBy) returns types:AuditEvent[]|error {
     do {
-        AuditEventSearch searchParams = {
-            orgId: context.orgId,
-            userId: userId,
-            action: action,
-            'resource: 'resource,
-            workflowInstanceId: workflowInstanceId,
-            comment: comment,
-            from: from,
-            to: to
-        };
-        stream<AuditEvent, persist:Error?> streamResult = dbClient->/auditevents.get([searchParams]);
-        types:AuditEvent[] dbAuditEvents = [];
-        check from AuditEvent dbAuditEvent in streamResult
-        do {
-            types:AuditEvent auditEvent = {
-                eventType: dbAuditEvent.eventType,
-                time: dbAuditEvent.timestamp,
-                user: dbAuditEvent.userId,
-                wkfId: dbAuditEvent.workflowInstanceId,
-                requestComment: dbAuditEvent.comment,
-                context: {
-                    workflowDefinitionIdentifier: dbAuditEvent.action,
-                    'resource: dbAuditEvent.'resource
-                }
-            };
-            dbAuditEvents.push(auditEvent);
-        };
-        return dbAuditEvents;
+
     } on fail error e {
         string message = "Error while searching audit events from the database";
         util:logError(context, message, e);
