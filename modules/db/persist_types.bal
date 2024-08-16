@@ -51,7 +51,7 @@ public type AuditEvent record {|
     string eventType;
     time:Utc timestamp;
     string userId;
-    string action;
+    string workflowDefinitionId;
     string 'resource;
     string? workflowInstanceId;
     string? comment;
@@ -63,7 +63,7 @@ public type AuditEventOptionalized record {|
     string eventType?;
     time:Utc timestamp?;
     string userId?;
-    string action?;
+    string workflowDefinitionId?;
     string 'resource?;
     string? workflowInstanceId?;
     string? comment?;
@@ -78,7 +78,7 @@ public type AuditEventUpdate record {|
     string eventType?;
     time:Utc timestamp?;
     string userId?;
-    string action?;
+    string workflowDefinitionId?;
     string 'resource?;
     string? workflowInstanceId?;
     string? comment?;

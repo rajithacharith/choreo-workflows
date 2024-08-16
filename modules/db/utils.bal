@@ -15,7 +15,6 @@
 // under the License.
 
 import workflow_mgt_service.types;
-import ballerina/lang.regexp;
 
 public isolated function stringArrayToString(string[] arr) returns string {
     string result = "";

@@ -26,7 +26,7 @@ CREATE TABLE workflow_instance (
     org_workflow_config_id VARCHAR(255) NOT NULL REFERENCES org_workflow_config(id),
     org_id VARCHAR(255) NOT NULL,
     resource VARCHAR(255) NOT NULL,
-    action VARCHAR(255) NOT NULL,
+    workflow_definition_id VARCHAR(255) NOT NULL REFERENCES workflow_definition(id),
     created_by VARCHAR(255) NOT NULL,
     created_time TIMESTAMPTZ NOT NULL,
     request_comment TEXT,
@@ -45,9 +45,9 @@ CREATE TABLE audit_event (
     event_type VARCHAR(50) NOT NULL, -- e.g., request, review, approve, reject, cancel, execute
     timestamp TIMESTAMPTZ NOT NULL,
     user_id VARCHAR(255) NOT NULL,
-    action VARCHAR(255) NOT NULL,
+    workflow_definition_id VARCHAR(255) NOT NULL REFERENCES workflow_definition(id),
     resource VARCHAR(255) NOT NULL,
-    workflow_instance_id VARCHAR(255),
+    workflow_instance_id VARCHAR(255) NOT NULL, --we do not foreign key, just kept as info
     comment TEXT
 );
 

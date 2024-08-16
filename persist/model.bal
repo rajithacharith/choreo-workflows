@@ -35,8 +35,9 @@ public type AuditEvent record {|
     @sql:Name {value: "user_id"}
     @sql:Varchar {length: 255}
     string userId;
+    @sql:Name {value: "workflow_definition_id"}
     @sql:Varchar {length: 255}
-    string action;
+    string workflowDefinitionId;
     @sql:Varchar {length: 255}
     string 'resource;
     @sql:Name {value: "workflow_instance_id"}

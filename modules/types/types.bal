@@ -112,12 +112,26 @@ public type ReviewerDecisionRequest record {|
     string reviewComment?;
 |};
 
-public type AuditEvent record {|
+public type AuditEventRequest record {|
+    string orgId;
+    time:Utc timestamp;
     AuditEventType eventType;
-    time:Utc time;
     string user;
-    *WorkflowInstanceResponse;
-    never WorkflowConfig?;
+    string 'resource;
+    string workflowInstanceId;
+    string comment?;
+    string workflowDefinitionId;
+|};
+
+public type AuditEvent record {|
+    string id;
+    *AuditEventRequest;
+    never workflowDefinitionId?;
+    record {|
+        string id;
+        string name;
+        string description;
+    |} workflowDefinition;
 |};
 
 # Schema instruction on how to format input data field to form
@@ -148,6 +162,7 @@ public type WorkflowContext record {|
 
 public type ReviewerDecision APPROVED|REJECTED;
 
+# Status of a workflow definition (Choreo operation) within the org
 public enum WorkflowMgtStatus {
     DISABLED,
     PENDING,

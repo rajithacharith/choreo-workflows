@@ -130,12 +130,18 @@ public type AuditEventWithRelations record {|
     time:Utc timestamp;
     @sql:Column {name: "user_id"}
     string userId;
-    @sql:Column {name: "action"}
-    string action;
     @sql:Column {name: "resource"}
     string 'resource;
     @sql:Column {name: "workflow_instance_id"}
-    string workflowInstanceId?;
+    string workflowInstanceId;
     @sql:Column {name: "comment"}
     string comment?;
+    record {|
+        @sql:Column {name: "id"}
+        string id;
+        @sql:Column {name: "name"}
+        string name;
+        @sql:Column {name: "description"}
+        string description;
+    |} workflowDefinition;
 |};

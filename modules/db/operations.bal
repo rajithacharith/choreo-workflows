@@ -16,7 +16,6 @@
 
 import workflow_mgt_service.types;
 import workflow_mgt_service.'error;
-import workflow_mgt_service.config;
 import workflow_mgt_service.util;
 
 import ballerina/persist;
@@ -225,7 +224,7 @@ public isolated function deleteWorkflowConfigById(util:Context context, string w
 
 //For UI
 
-public isolated function selectWorkflowInstances(util:Context context, int 'limit,
+public isolated function searchWorkflowInstances(util:Context context, int 'limit,
         int offset, string wkfDefinition, string status,
         string 'resource, string createdBy) returns stream<AnnotatedWkfInstanceWithRelations, persist:Error?>|error {
     do {
@@ -234,7 +233,7 @@ public isolated function selectWorkflowInstances(util:Context context, int 'limi
             //Filter by org
             //Sort by created time
             //Join with workflow definition
-            sql:ParameterizedQuery selectQuery = `SELECT wi.id, wi.org_id, wi.resource, wi.created_by, wi.created_time, wi.request_comment, wi.status, wi.reviewed_by, wi.reviewer_decision, wi.review_comment, wi.review_time, wi.org_workflow_config_id, wd.id, wd.name, wd.description, wc.assignee_roles, wc.assignees, wc.format_request_data, wc.external_workflow_engine_endpoint FROM workflow_instance wi JOIN workflow_definition wd ON wi.workflow_definition_id = wd.id JOIN org_workflow_config wc ON wi.org_workflow_config_id = wc.id WHERE wi.org_id = ${context.orgId} and wi.created_by = ${createdBy} and wi.resource = ${'resource} and wi.workflow_definition_id = ${wkfDefinition} and wi.status = ${status} ORDER BY wi.created_time DESC LIMIT ${'limit} OFFSET ${offset}`;
+            sql:ParameterizedQuery selectQuery = `SELECT wi.id, wi.org_id, wi.resource, wi.created_by, wi.created_time, wi.request_comment, wi.status, wi.reviewed_by, wi.reviewer_decision, wi.review_comment, wi.review_time, wi.org_workflow_config_id, wd.id, wd.name, wd.description, wc.assignee_roles, wc.assignees, wc.format_request_data, wc.external_workflow_engine_endpoint FROM workflow_instance wi JOIN workflow_definition wd ON wi.workflow_definition_id = wd.id JOIN org_workflow_config wc ON wi.org_workflow_config_id = wc.id WHERE wi.org_id = ${context.orgId} and wi.created_by = ${createdBy} and wi.resource = ${'resource} and wi.workflow_definition_id = ${wkfDefinition} and wi.status = ${status} ORDER BY wi.created_time OFFSET ${offset} ROW FETCH FIRST ${'limit} ROWS ONLY`;
             stream<AnnotatedWkfInstanceWithRelations, persist:Error?> resultStream = dbClient->queryNativeSQL(selectQuery);
             return resultStream;
     } on fail error e {
@@ -420,12 +419,12 @@ public isolated function persistAuditEvent(util:Context context, types:AuditEven
             id: auditEventUuid,
             orgId: context.orgId,
             eventType: auditEvent.eventType,
-            timestamp: auditEvent.time,
+            timestamp: auditEvent.timestamp,
             userId: context.userId,
-            action: auditEvent.context.workflowDefinitionIdentifier,
-            'resource: auditEvent.context.'resource,
-            workflowInstanceId: auditEvent.wkfId,
-            comment: auditEvent.requestComment
+            workflowDefinitionId: auditEvent.workflowDefinition.id,
+            'resource: auditEvent.'resource,
+            workflowInstanceId: auditEvent.workflowInstanceId,
+            comment: auditEvent.comment
         };
         string[] dbResult = check dbClient->/auditevents.post([insertData]);
         if dbResult.length() == 1 {
@@ -442,9 +441,33 @@ public isolated function persistAuditEvent(util:Context context, types:AuditEven
 }
 
 //search audit events
-public isolated function searchAuditEvents(util:Context context, int 'limit, int offset, string wkfDefinitionId, string status, string 'resource, string requestedBy, string reviewedBy, string executedBy) returns types:AuditEvent[]|error {
+public isolated function searchAuditEvents(util:Context context, int 'limit, int offset, string wkfDefinitionId, string status, string 'resource, string eventType, string userId) returns types:AuditEvent[]|error {
     do {
 
+        sql:ParameterizedQuery selectQuery = `SELECT ae.id, ae.org_id, ae.event_type, ae.timestamp, ae.user_id, ae.resource, ae.workflow_instance_id, ae.comment, wd.id, wd.name, wd.description FROM audit_event ae JOIN workflow_definition wd ON ae.workflow_definition_id = wd.id WHERE ae.org_id = ${context.orgId} and ae.action = ${wkfDefinitionId} and ae.status = ${status} and ae.resource = ${'resource} and ae.event_type = ${eventType} and ae.user_id = ${userId} ORDER BY ae.timestamp OFFSET ${offset} ROW FETCH FIRST ${'limit} ROWS ONLY`;
+
+        stream<AuditEventWithRelations, persist:Error?> resultStream = dbClient->queryNativeSQL(selectQuery);
+        types:AuditEvent[] auditEvents = [];
+        check from AuditEventWithRelations auditEvent in resultStream
+        do {
+            types:AuditEvent event = {
+                id: auditEvent.id,
+                orgId: auditEvent.orgId,
+                timestamp: auditEvent.timestamp,
+                eventType: check auditEvent.eventType.cloneWithType(),
+                user: auditEvent.userId,
+                'resource: auditEvent.'resource,
+                workflowInstanceId: auditEvent.workflowInstanceId,
+                comment: auditEvent.comment,
+                workflowDefinition: {
+                    id: auditEvent.workflowDefinition.id,
+                    name: auditEvent.workflowDefinition.name,
+                    description: auditEvent.workflowDefinition.description
+                }
+            };
+            auditEvents.push(event);
+        };
+        return auditEvents;
     } on fail error e {
         string message = "Error while searching audit events from the database";
         util:logError(context, message, e);

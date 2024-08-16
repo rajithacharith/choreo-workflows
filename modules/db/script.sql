@@ -27,7 +27,7 @@ CREATE TABLE "audit_event" (
 	"user_id" VARCHAR(255) NOT NULL,
 	"action" VARCHAR(255) NOT NULL,
 	"resource" VARCHAR(255) NOT NULL,
-	"workflow_instance_id" VARCHAR(255),
+	"workflow_instance_id" VARCHAR(255) NOT NULL,
 	"comment" VARCHAR(191),
 	PRIMARY KEY("id")
 );
