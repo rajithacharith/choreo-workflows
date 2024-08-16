@@ -225,46 +225,18 @@ public isolated function deleteWorkflowConfigById(util:Context context, string w
 
 //For UI
 
-public isolated function getWorkflowInstances(util:Context context, int 'limit,
+public isolated function selectWorkflowInstances(util:Context context, int 'limit,
         int offset, string wkfDefinition, string status,
-        string 'resource, string createdBy) returns types:WorkflowInstanceResponse[]|error {
+        string 'resource, string createdBy) returns stream<AnnotatedWkfInstanceWithRelations, persist:Error?>|error {
     do {
             //filter by orgId and user also
             //with pagination
             //Filter by org
             //Sort by created time
             //Join with workflow definition
-            sql:ParameterizedQuery selectQuery = `Select status, data from workflowinstances where orgId = ${context.orgId} and createdBy = ${createdBy}`;
-            stream<AnnotatedWkfInstanceWithDefinitionDetails, persist:Error?> resultStream = dbClient->queryNativeSQL(selectQuery);
-            types:WorkflowInstanceResponse[] wkfInstances = [];
-            check from AnnotatedWkfInstanceWithDefinitionDetails instance in resultStream
-            do {
-                types:WorkflowInstanceResponse wkfInstance = {
-                    wkfId: instance.id,
-                    orgId: instance.orgId,
-                    createdTime: instance.createdTime,
-                    createdBy: instance.createdBy,
-                    context: {
-                        workflowDefinitionIdentifier: instance.workflowDefinitionId,
-                        'resource: instance.'resource
-                    },
-                    workflowDefinitionIdentifier: {
-                        id: instance.workflowDefinition.id,
-                        name: instance.workflowDefinition.name,
-                        description: instance.workflowDefinition.description
-                    },
-                    requestComment: instance.requestComment,
-                    reviewerDecision: {
-                        reviewedBy: instance.reviewedBy,
-                        decision: check instance.reviewerDecision.cloneWithType(),
-                        reviewComment: instance.reviewComment
-                    },
-                    status: check instance.status.cloneWithType()
-                };
-                wkfInstances.push(wkfInstance) ;
-            };
-            return wkfInstances;
-
+            sql:ParameterizedQuery selectQuery = `SELECT wi.id, wi.org_id, wi.resource, wi.created_by, wi.created_time, wi.request_comment, wi.status, wi.reviewed_by, wi.reviewer_decision, wi.review_comment, wi.review_time, wi.org_workflow_config_id, wd.id, wd.name, wd.description, wc.assignee_roles, wc.assignees, wc.format_request_data, wc.external_workflow_engine_endpoint FROM workflow_instance wi JOIN workflow_definition wd ON wi.workflow_definition_id = wd.id JOIN org_workflow_config wc ON wi.org_workflow_config_id = wc.id WHERE wi.org_id = ${context.orgId} and wi.created_by = ${createdBy} and wi.resource = ${'resource} and wi.workflow_definition_id = ${wkfDefinition} and wi.status = ${status} ORDER BY wi.created_time DESC LIMIT ${'limit} OFFSET ${offset}`;
+            stream<AnnotatedWkfInstanceWithRelations, persist:Error?> resultStream = dbClient->queryNativeSQL(selectQuery);
+            return resultStream;
     } on fail error e {
         string message = "Error while retrieving workflow instances from the database";
         util:logError(context, message, e);

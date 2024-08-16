@@ -77,7 +77,7 @@ public type WorkflorInstanceWithDefinitionDetails record {|
     |} workflowDefinition;
 |};
 
-public type AnnotatedWkfInstanceWithDefinitionDetails record {|
+public type AnnotatedWkfInstanceWithRelations record {|
     readonly string id;
     @sql:Column {name: "org_id"}
     string orgId;
@@ -100,8 +100,6 @@ public type AnnotatedWkfInstanceWithDefinitionDetails record {|
     time:Utc? reviewTime;
     @sql:Column {name: "org_workflow_config_id"}
     string orgWorkflowConfigId;
-    @sql:Column {name: "workflow_definition_id"}
-    string workflowDefinitionId;
     record {|
         @sql:Column {name: "id"}
         string id;
@@ -110,4 +108,34 @@ public type AnnotatedWkfInstanceWithDefinitionDetails record {|
         @sql:Column {name: "description"}
         string description;
     |} workflowDefinition;
+    record {|
+        @sql:Column {name: "assignee_roles"}
+        string assigneeRoles;
+        @sql:Column {name: "assignees"}
+        string assignees;
+        @sql:Column {name: "format_request_data"}
+        boolean formatRequestData;
+        @sql:Column {name: "external_workflow_engine_endpoint"}
+        string externalWorkflowEngineEndpoint;
+    |} orgWorkflowConfig;
+|};
+
+public type AuditEventWithRelations record {|
+    readonly string id;
+    @sql:Column {name: "org_id"}
+    string orgId;
+    @sql:Column {name: "event_type"}
+    string eventType;
+    @sql:Column {name: "timestamp"}
+    time:Utc timestamp;
+    @sql:Column {name: "user_id"}
+    string userId;
+    @sql:Column {name: "action"}
+    string action;
+    @sql:Column {name: "resource"}
+    string 'resource;
+    @sql:Column {name: "workflow_instance_id"}
+    string workflowInstanceId?;
+    @sql:Column {name: "comment"}
+    string comment?;
 |};
