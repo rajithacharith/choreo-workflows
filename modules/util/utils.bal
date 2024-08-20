@@ -28,7 +28,8 @@ public isolated function getContext(http:RequestContext ctx, string orgId) retur
     Context context = {
         requestId: getFromContext(ctx, REQUEST_ID),
         orgId: getFromContext(ctx, ORGANIZATION_ID),
-        userId: getFromContext(ctx, USER_ID)
+        userId: getFromContext(ctx, USER_ID),
+        orgHandle: getFromContext(ctx, ORGANIZATION_HANDLE)
     };
     return context;
 }

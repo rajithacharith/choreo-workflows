@@ -19,6 +19,8 @@ import ballerina/http;
 import workflow_mgt_service.util;
 import workflow_mgt_service.db;
 import ballerina/persist;
+import workflow_mgt_service.rpc_app_service;
+import ballerina/grpc;
 
 public isolated function getWorkflowInstances(util:Context context, int 'limit,
         int offset, string wkfDefinition, string status,
@@ -65,7 +67,30 @@ isolated function filterWorkflowInstancesByUser(util:Context context, stream<db:
 }
 
 isolated function isWorkflowInstanceApprovableForUser(util:Context context, string[] rolesList, string[] assigneesList) returns boolean|error {
-    return true;
+
+    foreach string asignee in assigneesList {
+        if (asignee == context.userId) {
+            return true;
+        }
+    }
+    
+    rpc_app_service:GetUserRolesFromAuthzServiceResponse|grpc:Error roles = rpc_app_service:'client->GetUserRolesFromAuthzService({
+        userIdpId: context.userId,
+        orgHandle: context.orgHandle,
+        enterpriseGroups: []
+    });
+    
+    if roles is grpc:Error {
+        return error("Error while fetching user roles from authz service", roles);
+    }
+    foreach rpc_app_service:Role role in roles.roles {
+        foreach string assigneeRole in rolesList {
+            if (role.'handle == assigneeRole) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 public isolated function formatDataForReviewer(string workflowInstanceId, json data) returns json | error {

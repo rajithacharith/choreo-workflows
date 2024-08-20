@@ -1,0 +1,324 @@
+import ballerina/grpc;
+import ballerina/protobuf;
+import ballerina/time;
+
+public const string USER_SERVICE_DESC = "0A12757365725F736572766963652E70726F746F120B63686F72656F2E617069731A1F676F6F676C652F70726F746F6275662F74696D657374616D702E70726F746F228D010A2347657455736572526F6C657346726F6D417574687A5365727669636552657175657374121C0A097573657249647049641801200128095209757365724964704964121C0A096F726748616E646C6518022001280952096F726748616E646C65122A0A10656E746572707269736547726F7570731803200328095210656E746572707269736547726F757073224F0A2447657455736572526F6C657346726F6D417574687A53657276696365526573706F6E736512270A05726F6C657318012003280B32112E63686F72656F2E617069732E526F6C655205726F6C657322F0040A04526F6C65120E0A0269641801200128035202696412200A0B6465736372697074696F6E180220012809520B6465736372697074696F6E12210A0C646973706C61795F6E616D65180320012809520B646973706C61794E616D6512160A0668616E646C65180420012809520668616E646C6512210A0C64656661756C745F726F6C65180520012808520B64656661756C74526F6C6512390A0B7065726D697373696F6E7318062003280B32172E63686F72656F2E617069732E5065726D697373696F6E520B7065726D697373696F6E7312280A047461677318072003280B32142E63686F72656F2E617069732E526F6C6554616752047461677312270A05757365727318082003280B32112E63686F72656F2E617069732E5573657252057573657273121D0A0A637265617465645F62791809200128095209637265617465644279121D0A0A757064617465645F6279180A20012809520975706461746564427912390A0A637265617465645F6174180B2001280B321A2E676F6F676C652E70726F746F6275662E54696D657374616D70520963726561746564417412390A0A757064617465645F6174180C2001280B321A2E676F6F676C652E70726F746F6275662E54696D657374616D70520975706461746564417412120A0475756964180D2001280952047575696412520A1367726F757073546F526F6C654D617070696E67180E2001280B32202E63686F72656F2E617069732E47726F757073546F526F6C654D617070696E67521367726F757073546F526F6C654D617070696E67122E0A1261737369676E656447726F7570436F756E74180F20012803521261737369676E656447726F7570436F756E7422AD020A0A5065726D697373696F6E120E0A0269641801200128035202696412160A0668616E646C65180220012809520668616E646C6512210A0C646973706C61795F6E616D65180320012809520B646973706C61794E616D65121F0A0B646F6D61696E5F61726561180420012809520A646F6D61696E4172656112200A0B6465736372697074696F6E180520012809520B6465736372697074696F6E121B0A09706172656E745F69641806200128035208706172656E74496412390A0A637265617465645F617418072001280B321A2E676F6F676C652E70726F746F6275662E54696D657374616D70520963726561746564417412390A0A757064617465645F617418082001280B321A2E676F6F676C652E70726F746F6275662E54696D657374616D70520975706461746564417422E7010A07526F6C65546167120E0A02696418012001280352026964121F0A0B726F6C655F68616E646C65180220012809520A726F6C6548616E646C6512160A0668616E646C65180320012809520668616E646C65121D0A0A637265617465645F6279180420012809520963726561746564427912390A0A637265617465645F617418052001280B321A2E676F6F676C652E70726F746F6275662E54696D657374616D70520963726561746564417412390A0A757064617465645F617418062001280B321A2E676F6F676C652E70726F746F6275662E54696D657374616D70520975706461746564417422F7020A0455736572120E0A0269641801200128035202696412150A066964705F696418022001280952056964704964121F0A0B706963747572655F75726C180320012809520A7069637475726555726C12140A05656D61696C1804200128095205656D61696C12210A0C646973706C61795F6E616D65180520012809520B646973706C61794E616D65122A0A0667726F75707318062003280B32122E63686F72656F2E617069732E47726F7570520667726F75707312270A05726F6C657318072003280B32112E63686F72656F2E617069732E526F6C655205726F6C657312230A0D69735F656E7465727072697365180820012808520C6973456E746572707269736512390A0A637265617465645F617418092001280B321A2E676F6F676C652E70726F746F6275662E54696D657374616D70520963726561746564417412390A0A657870697265645F6174180A2001280B321A2E676F6F676C652E70726F746F6275662E54696D657374616D7052096578706972656441742292010A1347726F757073546F526F6C654D617070696E6712180A076F72675555494418012001280952076F726755554944121A0A08726F6C65555549441802200128095208726F6C655555494412450A1167726F75704173736F63696174696F6E7318032003280B32172E63686F72656F2E617069732E47726F75704173736F63521167726F75704173736F63696174696F6E7322E7010A0A47726F75704173736F6312200A0B67726F757048616E646C65180120012809520B67726F757048616E646C65121C0A0967726F757055554944180220012809520967726F757055554944122A0A1067726F7570446973706C61794E616D65180320012809521067726F7570446973706C61794E616D65123D0A0C6D617070696E674C6576656C18042001280E32192E63686F72656F2E617069732E4D617070696E674C6576656C520C6D617070696E674C6576656C122E0A126D61707065645265736F757263655555494418052001280952126D61707065645265736F75726365555549442296050A0547726F7570120E0A0269641801200128035202696412190A086F72675F6E616D6518022001280952076F72674E616D6512190A086F72675F7575696418032001280952076F72675575696412200A0B6465736372697074696F6E180420012809520B6465736372697074696F6E12230A0D64656661756C745F67726F7570180520012808520C64656661756C7447726F757012210A0C646973706C61795F6E616D65180620012809520B646973706C61794E616D6512160A0668616E646C65180720012809520668616E646C6512270A05726F6C657318082003280B32112E63686F72656F2E617069732E526F6C655205726F6C657312270A05757365727318092003280B32112E63686F72656F2E617069732E557365725205757365727312290A0474616773180A2003280B32152E63686F72656F2E617069732E47726F7570546167520474616773121D0A0A637265617465645F6279180B200128095209637265617465644279121D0A0A757064617465645F6279180C20012809520975706461746564427912390A0A637265617465645F6174180D2001280B321A2E676F6F676C652E70726F746F6275662E54696D657374616D70520963726561746564417412390A0A757064617465645F6174180E2001280B321A2E676F6F676C652E70726F746F6275662E54696D657374616D70520975706461746564417412120A0475756964180F20012809520475756964122C0A1161737369676E6564526F6C65436F756E74181020012803521161737369676E6564526F6C65436F756E7412520A13726F6C6573546F47726F75704D617070696E6718112001280B32202E63686F72656F2E617069732E526F6C6573546F47726F75704D617070696E675213726F6C6573546F47726F75704D617070696E67229C020A0847726F7570546167120E0A0269641801200128035202696412190A086F72675F6E616D6518022001280952076F72674E616D6512190A086F72675F7575696418032001280952076F726755756964121D0A0A67726F75705F6E616D65180420012809520967726F75704E616D6512160A0668616E646C65180520012809520668616E646C65121D0A0A637265617465645F6279180620012809520963726561746564427912390A0A637265617465645F617418072001280B321A2E676F6F676C652E70726F746F6275662E54696D657374616D70520963726561746564417412390A0A757064617465645F617418092001280B321A2E676F6F676C652E70726F746F6275662E54696D657374616D7052097570646174656441742291010A13526F6C6573546F47726F75704D617070696E6712180A076F72675555494418012001280952076F726755554944121C0A0967726F757055554944180220012809520967726F75705555494412420A10726F6C654173736F63696174696F6E7318032003280B32162E63686F72656F2E617069732E526F6C654173736F635210726F6C654173736F63696174696F6E7322E0010A09526F6C654173736F63121E0A0A726F6C6548616E646C65180120012809520A726F6C6548616E646C65121A0A08726F6C65555549441802200128095208726F6C655555494412280A0F726F6C65446973706C61794E616D65180320012809520F726F6C65446973706C61794E616D65123D0A0C6D617070696E674C6576656C18042001280E32192E63686F72656F2E617069732E4D617070696E674C6576656C520C6D617070696E674C6576656C122E0A126D61707065645265736F757263655555494418052001280952126D61707065645265736F757263655555494422DE010A2446696E64557365727342794F7267616E697A6174696F6E4279526F6C6552657175657374122B0A116F7267616E697A6174696F6E5F6E616D6518012001280952106F7267616E697A6174696F6E4E616D6512270A0F6578636C7564696E675F726F6C6573180220032809520E6578636C7564696E67526F6C657312160A066F666673657418032001280952066F666673657412140A056C696D697418042001280952056C696D697412160A067365617263681805200128095206736561726368121A0A08696E636C756465731806200328095208696E636C7564657322690A2546696E64557365727342794F7267616E697A6174696F6E4279526F6C65526573706F6E736512400A0D706167696E617465645573657218012001280B321A2E63686F72656F2E617069732E506167696E6174656455736572520D706167696E61746564557365722285010A0D506167696E617465645573657212140A05636F756E741801200128035205636F756E7412250A046C69737418022003280B32112E63686F72656F2E617069732E5573657252046C69737412370A0A706167696E6174696F6E18032001280B32172E63686F72656F2E617069732E506167696E6174696F6E520A706167696E6174696F6E2280010A0A506167696E6174696F6E12160A066F666673657418012001280352066F666673657412140A056C696D697418022001280352056C696D697412140A05746F74616C1803200128035205746F74616C121A0A0870726576696F7573180420012809520870726576696F757312120A046E65787418052001280952046E6578742A240A0C4D617070696E674C6576656C12070A034F52471000120B0A0750524F4A4543541001329C020A0B55736572536572766963651286010A1D46696E64557365727342794F7267616E697A6174696F6E4279526F6C6512312E63686F72656F2E617069732E46696E64557365727342794F7267616E697A6174696F6E4279526F6C65526571756573741A322E63686F72656F2E617069732E46696E64557365727342794F7267616E697A6174696F6E4279526F6C65526573706F6E73651283010A1C47657455736572526F6C657346726F6D417574687A5365727669636512302E63686F72656F2E617069732E47657455736572526F6C657346726F6D417574687A53657276696365526571756573741A312E63686F72656F2E617069732E47657455736572526F6C657346726F6D417574687A53657276696365526573706F6E7365620670726F746F33";
+
+public isolated client class UserServiceClient {
+    *grpc:AbstractClientEndpoint;
+
+    private final grpc:Client grpcClient;
+
+    public isolated function init(string url, *grpc:ClientConfiguration config) returns grpc:Error? {
+        self.grpcClient = check new (url, config);
+        check self.grpcClient.initStub(self, USER_SERVICE_DESC);
+    }
+
+    isolated remote function FindUsersByOrganizationByRole(FindUsersByOrganizationByRoleRequest|ContextFindUsersByOrganizationByRoleRequest req) returns FindUsersByOrganizationByRoleResponse|grpc:Error {
+        map<string|string[]> headers = {};
+        FindUsersByOrganizationByRoleRequest message;
+        if req is ContextFindUsersByOrganizationByRoleRequest {
+            message = req.content;
+            headers = req.headers;
+        } else {
+            message = req;
+        }
+        var payload = check self.grpcClient->executeSimpleRPC("choreo.apis.UserService/FindUsersByOrganizationByRole", message, headers);
+        [anydata, map<string|string[]>] [result, _] = payload;
+        return <FindUsersByOrganizationByRoleResponse>result;
+    }
+
+    isolated remote function FindUsersByOrganizationByRoleContext(FindUsersByOrganizationByRoleRequest|ContextFindUsersByOrganizationByRoleRequest req) returns ContextFindUsersByOrganizationByRoleResponse|grpc:Error {
+        map<string|string[]> headers = {};
+        FindUsersByOrganizationByRoleRequest message;
+        if req is ContextFindUsersByOrganizationByRoleRequest {
+            message = req.content;
+            headers = req.headers;
+        } else {
+            message = req;
+        }
+        var payload = check self.grpcClient->executeSimpleRPC("choreo.apis.UserService/FindUsersByOrganizationByRole", message, headers);
+        [anydata, map<string|string[]>] [result, respHeaders] = payload;
+        return {content: <FindUsersByOrganizationByRoleResponse>result, headers: respHeaders};
+    }
+
+    isolated remote function GetUserRolesFromAuthzService(GetUserRolesFromAuthzServiceRequest|ContextGetUserRolesFromAuthzServiceRequest req) returns GetUserRolesFromAuthzServiceResponse|grpc:Error {
+        map<string|string[]> headers = {};
+        GetUserRolesFromAuthzServiceRequest message;
+        if req is ContextGetUserRolesFromAuthzServiceRequest {
+            message = req.content;
+            headers = req.headers;
+        } else {
+            message = req;
+        }
+        var payload = check self.grpcClient->executeSimpleRPC("choreo.apis.UserService/GetUserRolesFromAuthzService", message, headers);
+        [anydata, map<string|string[]>] [result, _] = payload;
+        return <GetUserRolesFromAuthzServiceResponse>result;
+    }
+
+    isolated remote function GetUserRolesFromAuthzServiceContext(GetUserRolesFromAuthzServiceRequest|ContextGetUserRolesFromAuthzServiceRequest req) returns ContextGetUserRolesFromAuthzServiceResponse|grpc:Error {
+        map<string|string[]> headers = {};
+        GetUserRolesFromAuthzServiceRequest message;
+        if req is ContextGetUserRolesFromAuthzServiceRequest {
+            message = req.content;
+            headers = req.headers;
+        } else {
+            message = req;
+        }
+        var payload = check self.grpcClient->executeSimpleRPC("choreo.apis.UserService/GetUserRolesFromAuthzService", message, headers);
+        [anydata, map<string|string[]>] [result, respHeaders] = payload;
+        return {content: <GetUserRolesFromAuthzServiceResponse>result, headers: respHeaders};
+    }
+}
+
+public isolated client class UserServiceFindUsersByOrganizationByRoleResponseCaller {
+    private final grpc:Caller caller;
+
+    public isolated function init(grpc:Caller caller) {
+        self.caller = caller;
+    }
+
+    public isolated function getId() returns int {
+        return self.caller.getId();
+    }
+
+    isolated remote function sendFindUsersByOrganizationByRoleResponse(FindUsersByOrganizationByRoleResponse response) returns grpc:Error? {
+        return self.caller->send(response);
+    }
+
+    isolated remote function sendContextFindUsersByOrganizationByRoleResponse(ContextFindUsersByOrganizationByRoleResponse response) returns grpc:Error? {
+        return self.caller->send(response);
+    }
+
+    isolated remote function sendError(grpc:Error response) returns grpc:Error? {
+        return self.caller->sendError(response);
+    }
+
+    isolated remote function complete() returns grpc:Error? {
+        return self.caller->complete();
+    }
+
+    public isolated function isCancelled() returns boolean {
+        return self.caller.isCancelled();
+    }
+}
+
+public isolated client class UserServiceGetUserRolesFromAuthzServiceResponseCaller {
+    private final grpc:Caller caller;
+
+    public isolated function init(grpc:Caller caller) {
+        self.caller = caller;
+    }
+
+    public isolated function getId() returns int {
+        return self.caller.getId();
+    }
+
+    isolated remote function sendGetUserRolesFromAuthzServiceResponse(GetUserRolesFromAuthzServiceResponse response) returns grpc:Error? {
+        return self.caller->send(response);
+    }
+
+    isolated remote function sendContextGetUserRolesFromAuthzServiceResponse(ContextGetUserRolesFromAuthzServiceResponse response) returns grpc:Error? {
+        return self.caller->send(response);
+    }
+
+    isolated remote function sendError(grpc:Error response) returns grpc:Error? {
+        return self.caller->sendError(response);
+    }
+
+    isolated remote function complete() returns grpc:Error? {
+        return self.caller->complete();
+    }
+
+    public isolated function isCancelled() returns boolean {
+        return self.caller.isCancelled();
+    }
+}
+
+public type ContextFindUsersByOrganizationByRoleResponse record {|
+    FindUsersByOrganizationByRoleResponse content;
+    map<string|string[]> headers;
+|};
+
+public type ContextFindUsersByOrganizationByRoleRequest record {|
+    FindUsersByOrganizationByRoleRequest content;
+    map<string|string[]> headers;
+|};
+
+public type ContextGetUserRolesFromAuthzServiceRequest record {|
+    GetUserRolesFromAuthzServiceRequest content;
+    map<string|string[]> headers;
+|};
+
+public type ContextGetUserRolesFromAuthzServiceResponse record {|
+    GetUserRolesFromAuthzServiceResponse content;
+    map<string|string[]> headers;
+|};
+
+@protobuf:Descriptor {value: USER_SERVICE_DESC}
+public type Group record {|
+    int id = 0;
+    string org_name = "";
+    string org_uuid = "";
+    string description = "";
+    boolean default_group = false;
+    string display_name = "";
+    string 'handle = "";
+    Role[] roles = [];
+    User[] users = [];
+    GroupTag[] tags = [];
+    string created_by = "";
+    string updated_by = "";
+    time:Utc created_at = [0, 0.0d];
+    time:Utc updated_at = [0, 0.0d];
+    string uuid = "";
+    int assignedRoleCount = 0;
+    RolesToGroupMapping rolesToGroupMapping = {};
+|};
+
+@protobuf:Descriptor {value: USER_SERVICE_DESC}
+public type FindUsersByOrganizationByRoleResponse record {|
+    PaginatedUser paginatedUser = {};
+|};
+
+@protobuf:Descriptor {value: USER_SERVICE_DESC}
+public type User record {|
+    int id = 0;
+    string idp_id = "";
+    string picture_url = "";
+    string email = "";
+    string display_name = "";
+    Group[] groups = [];
+    Role[] roles = [];
+    boolean is_enterprise = false;
+    time:Utc created_at = [0, 0.0d];
+    time:Utc expired_at = [0, 0.0d];
+|};
+
+@protobuf:Descriptor {value: USER_SERVICE_DESC}
+public type FindUsersByOrganizationByRoleRequest record {|
+    string organization_name = "";
+    string[] excluding_roles = [];
+    string offset = "";
+    string 'limit = "";
+    string search = "";
+    string[] includes = [];
+|};
+
+@protobuf:Descriptor {value: USER_SERVICE_DESC}
+public type GetUserRolesFromAuthzServiceRequest record {|
+    string userIdpId = "";
+    string orgHandle = "";
+    string[] enterpriseGroups = [];
+|};
+
+@protobuf:Descriptor {value: USER_SERVICE_DESC}
+public type GroupsToRoleMapping record {|
+    string orgUUID = "";
+    string roleUUID = "";
+    GroupAssoc[] groupAssociations = [];
+|};
+
+@protobuf:Descriptor {value: USER_SERVICE_DESC}
+public type GroupAssoc record {|
+    string groupHandle = "";
+    string groupUUID = "";
+    string groupDisplayName = "";
+    MappingLevel mappingLevel = ORG;
+    string mappedResourceUUID = "";
+|};
+
+@protobuf:Descriptor {value: USER_SERVICE_DESC}
+public type PaginatedUser record {|
+    int count = 0;
+    User[] list = [];
+    Pagination pagination = {};
+|};
+
+@protobuf:Descriptor {value: USER_SERVICE_DESC}
+public type RoleAssoc record {|
+    string roleHandle = "";
+    string roleUUID = "";
+    string roleDisplayName = "";
+    MappingLevel mappingLevel = ORG;
+    string mappedResourceUUID = "";
+|};
+
+@protobuf:Descriptor {value: USER_SERVICE_DESC}
+public type RoleTag record {|
+    int id = 0;
+    string role_handle = "";
+    string 'handle = "";
+    string created_by = "";
+    time:Utc created_at = [0, 0.0d];
+    time:Utc updated_at = [0, 0.0d];
+|};
+
+@protobuf:Descriptor {value: USER_SERVICE_DESC}
+public type Role record {|
+    int id = 0;
+    string description = "";
+    string display_name = "";
+    string 'handle = "";
+    boolean default_role = false;
+    Permission[] permissions = [];
+    RoleTag[] tags = [];
+    User[] users = [];
+    string created_by = "";
+    string updated_by = "";
+    time:Utc created_at = [0, 0.0d];
+    time:Utc updated_at = [0, 0.0d];
+    string uuid = "";
+    GroupsToRoleMapping groupsToRoleMapping = {};
+    int assignedGroupCount = 0;
+|};
+
+@protobuf:Descriptor {value: USER_SERVICE_DESC}
+public type Pagination record {|
+    int offset = 0;
+    int 'limit = 0;
+    int total = 0;
+    string previous = "";
+    string next = "";
+|};
+
+@protobuf:Descriptor {value: USER_SERVICE_DESC}
+public type GroupTag record {|
+    int id = 0;
+    string org_name = "";
+    string org_uuid = "";
+    string group_name = "";
+    string 'handle = "";
+    string created_by = "";
+    time:Utc created_at = [0, 0.0d];
+    time:Utc updated_at = [0, 0.0d];
+|};
+
+@protobuf:Descriptor {value: USER_SERVICE_DESC}
+public type RolesToGroupMapping record {|
+    string orgUUID = "";
+    string groupUUID = "";
+    RoleAssoc[] roleAssociations = [];
+|};
+
+@protobuf:Descriptor {value: USER_SERVICE_DESC}
+public type GetUserRolesFromAuthzServiceResponse record {|
+    Role[] roles = [];
+|};
+
+@protobuf:Descriptor {value: USER_SERVICE_DESC}
+public type Permission record {|
+    int id = 0;
+    string 'handle = "";
+    string display_name = "";
+    string domain_area = "";
+    string description = "";
+    int parent_id = 0;
+    time:Utc created_at = [0, 0.0d];
+    time:Utc updated_at = [0, 0.0d];
+|};
+
+public enum MappingLevel {
+    ORG, PROJECT
+}
+

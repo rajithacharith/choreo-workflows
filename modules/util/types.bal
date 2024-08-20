@@ -19,6 +19,7 @@ public type Context record {|
     string requestId;
     string orgId;
     string userId;
+    string orgHandle;
     anydata...;
 |};
 

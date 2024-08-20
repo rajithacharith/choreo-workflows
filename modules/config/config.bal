@@ -13,3 +13,6 @@ public configurable string dbUsername = "postgres";
 //public configurable string dbPassword = readStringFromFile(dbPasswordPath, "");
 public configurable string dbPassword = "hasitha";
 public configurable string dbName = "choreo_workflow_service_db";
+
+
+public configurable string appServiceUrl = "localhost:9090";
